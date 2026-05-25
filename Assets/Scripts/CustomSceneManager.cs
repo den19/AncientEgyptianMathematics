@@ -72,12 +72,36 @@ public class CustomSceneManager : MonoBehaviour
         }
     }
 
+    public void ResetGameState()
+    {
+        if (StateManager.Instance != null)
+        {
+            StateManager.Instance.ResetState();
+        }
+    }
+
     public void ExitApp()
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
+#elif UNITY_ANDROID
+        try
+        {
+            using (var jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            {
+                using (var activity = jc.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    activity.Call("finishAndRemoveTask");
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Ошибка при нативном закрытии приложения: " + e.Message);
+            Application.Quit();
+        }
 #else
-Application.Quit();
+        Application.Quit();
 #endif
     }
 }

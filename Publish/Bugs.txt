@@ -1,0 +1,260 @@
+1. Критические дефекты (Critical Defects)
+Дефект №1: Критическая ошибка сохранения прогресса чтения Урока 2 (Copy-Paste баг)
+В методе SaveState() при сохранении состояния прохождения Урока 2 допущена опечатка: вместо переменной Lesson2ReadingPassed сохраняется состояние Lesson1ReadingPassed.
+
+
+StateManager.cs
+Lines 740-746
+        PlayerPrefs.SetInt("Lesson2RazvlivNilaPassed", Lesson2RazvlivNilaPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2ProblemaPloshadiUchastkaPassed", Lesson2ProblemaPloshadiUchastkaPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2GerpedonaptPassed", Lesson2GerpedonaptPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2TeoremaPifagoraPassed", Lesson2TeoremaPifagoraPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2EgipetskiyTreugolnikPassed", Lesson2EgipetskiyTreugolnikPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2ReadingPassed", Lesson1ReadingPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("AchievementPanel2Passed", AchievementPanel2Passed == true ? 1 : 0);
+Последствия:
+Если игрок завершил чтение в Уроке 1 (Lesson1ReadingPassed = true), то при сохранении игра автоматически запишет в PlayerPrefs, что и в Уроке 2 чтение пройдено. При следующем запуске Урок 2 Reading будет ошибочно отмечен как выполненный.
+Если игрок прочитал Урок 2, но НЕ читал Урок 1, игра запишет 0 (так как Lesson1ReadingPassed равен false), и весь прогресс чтения Урока 2 будет утерян после перезапуска.
+Дефект №2: Ошибка сброса достижений в ResetState()
+В методе сброса состояния ResetState() переменная панели достижений 3-го уровня (AchievementPanel3Passed) не сбрасывается, а переменная 4-го уровня сбрасывается дважды.
+
+
+StateManager.cs
+Lines 865-877
+        Lesson3ShadufPassed = false;
+        Lesson3PodemVodiCherezShadufPassed = false;
+        Lesson3ShluziPassed = false;
+        Lesson3VodniePutiPyramidPassed = false;
+        Lesson3ReadingPassed = false;
+        AchievementPanel4Passed = false;
+        Lesson4SiriusAPassed = false;
+        Lesson4SiriusAAndSunPassed = false;
+        Lesson4DvoynayaZvezdaPassed = false;
+        Lesson4SozvezdieBolshoyPesPassed = false;
+        Lesson4ReadingPassed = false;
+        AchievementPanel4Passed = false;
+Последствия: При полном сбросе игры (начале заново) переменная AchievementPanel3Passed останется true (если она была получена ранее). В результате при повторном прохождении панель достижений Урока 3 (achievementPanel3) никогда больше не покажется игроку.
+Дефект №3: Недостижимость финального достижения (Rank == 100)
+Система начисления ранга завязана на точное совпадение значений Rank при проверке достижений. Но максимальный ранг рассчитан неверно:
+
+Урок 1: $5 \times 3$ очка = $15$ ранга (Achievement 1 на Rank == 15)
+Урок 2: $6 \times 3$ очка = $18$ ранга (Achievement 2 на Rank == 33 -> $15+18$)
+Урок 3: $5 \times 3$ очка = $15$ ранга (Achievement 3 на Rank == 48 -> $33+15$)
+Урок 4: $5 \times 3$ очка = $15$ ранга (Achievement 4 на Rank == 63 -> $48+15$)
+Урок 5: $6 \times 3$ очка = $18$ ранга (Achievement 5 на Rank == 81 -> $63+18$)
+Урок 6: $2 \times 11$ очков = $22$ ранга! Суммарно: $81 + 22 = 103$ ранга.
+Но при получении частей Урока 6 ранг увеличивается напрямую через Rank += 11:
+
+
+StateManager.cs
+Lines 1223-1232
+    public void Notation6PicesSetter()
+    {
+        if (!Lesson6PicesPassed)
+        {
+            Lesson6PicesPassed = true;
+            Rank += Lesson6PicesValue;
+            SaveState();
+            CheckAchievements();
+        }
+    }
+А проверка достижения выглядит так:
+
+
+StateManager.cs
+Lines 424-427
+        if (Rank == 100)
+        {
+            ShowAchievementPanel6();
+        }
+Последствия: При завершении первого задания Урока 6 ранг игрока станет $81 + 11 = 92$. При завершении второго задания ранг прыгнет сразу на $92 + 11 = 103$. Значение Rank никогда не будет в точности равно 100, а значит, финальная панель победы/достижения никогда не откроется! Кроме того, ранг свыше 100% выглядит некорректно в UI.
+Дефект №4: Серьезнейшая просадка производительности на каждый клик (GameObject.Find в AddClick)
+Каждый раз, когда игрок совершает клик, вызывается метод AddClick(), который вызывает FindUIElements():
+
+
+StateManager.cs
+Lines 306-311
+    public void AddClick(Vector3 clickPosition)
+    {
+        LoadState();
+        Energy++;
+        FindUIElements();
+Метод FindUIElements() на каждый чих производит поиск объектов по тегам и именам во всей сцене:
+
+
+StateManager.cs
+Lines 193-217
+    public void FindUIElements()
+    {
+        // Поиск текста времени сессии
+        GameObject timeObject = GameObject.FindWithTag("SessionTime");
+        if (timeObject != null)
+        {
+            sessionTimeText = timeObject.GetComponent<Text>();
+            UpdateTimeDisplay();
+        }
+        // Поиск текста энергии
+        GameObject energyObject = GameObject.FindWithTag("Energy");
+        if (energyObject != null)
+        {
+            energyText = energyObject.GetComponent<TextMeshProUGUI>();
+            UpdateEnergyDisplay();
+        }
+        // Поиск текста процентов
+        GameObject rankObject = GameObject.FindWithTag("Rank");
+        if (rankObject != null)
+        {
+            rankText = rankObject.GetComponent<TextMeshProUGUI>();
+            UpdateRankDisplay();
+        }
+И далее вызывает методы вроде SetLevel1IconComplete(), которые также выполняют GameObject.Find("Level1Icon") и т.д.
+
+Последствия: Метод GameObject.Find осуществляет полный перебор всех игровых объектов на активной сцене. Вызов его по 10 раз за один клик приведет к резким лагам, фризам кадра (Frame Drop) и выделению большого количества мусора в памяти (Garbage Collection), особенно на мобильных устройствах или в сценах с большим количеством объектов.
+Дефект №5: Износ диска и лаги из-за сохранения PlayerPrefs каждую секунду
+В корутине отслеживания времени каждую секунду вызываются методы LoadState() и SaveState():
+
+
+StateManager.cs
+Lines 260-270
+    private IEnumerator TimeTrackerCoroutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1f);
+            LoadState();
+            SessionTime += 1f;
+            UpdateTimeDisplay();
+            SaveState();
+        }
+    }
+Последствия: Метод SaveState() внутри себя вызывает PlayerPrefs.Save(), который принудительно записывает данные на диск (или в реестр Windows / файловую систему Android/iOS). Запись на физический диск каждую секунду:
+Вызывает микро-фризы игрового процесса, так как операции ввода-вывода (I/O) блокируют основной поток Unity.
+Преждевременно изнашивает ячейки флеш-памяти мобильных устройств.
+Постоянный LoadState() каждую секунду совершенно избыточен, ведь данные и так хранятся в оперативной памяти.
+Дефект №6: Утечка дубликатов синглтонов на сценах
+В методе StateManager.Awake() закомментирована строчка уничтожения дубликатов, а метод DontDestroyOnLoad вызывается для любого экземпляра еще до проверки на синглтон:
+
+
+StateManager.cs
+Lines 150-165
+    private void Awake()
+    {
+        LoadState();
+        DontDestroyOnLoad(this.gameObject);
+        // Реализация Singleton
+        if (Instance == null)
+        {
+            Instance = this;            
+            Initialize();
+        }
+        else
+        {
+            FindUIElements();
+            //Destroy(gameObject);
+        }
+    }
+Аналогичная проблема присутствует и в SoundManager.cs, где дублирующий объект не уничтожается.
+
+Последствия: При каждом переходе между сценами, если на новой сцене находится пресет StateManager или SoundManager, игра будет плодить их новые копии, которые благодаря DontDestroyOnLoad никогда не удалятся. Через 10 переходов по сценам у тебя в иерархии будет висеть по 10 копий менеджеров, забивая память и дублируя логику (например, вызовы событий смены сцен).
+Дефект №7: Потенциальный краш (NullReferenceException) на мобильных устройствах
+В утилите создания скриншотов используется новая система ввода Unity (Input System), но без проверки на существование клавиатуры:
+
+
+ScreenshotUtility.cs
+Lines 101-106
+        if (Keyboard.current.FindKeyOnCurrentKeyboardLayout(m_ScreenshotKey).wasPressedThisFrame)
+        {
+            TakeScreenshot();
+        }
+Последствия: На мобильных устройствах (Android/iOS), где физическая клавиатура отсутствует, свойство Keyboard.current вернет null. Попытка обратиться к нему вызовет ошибку NullReferenceException в каждом кадре (в методе Update). Это полностью забьет логи ошибками, снизит FPS до нуля и может заблокировать выполнение других скриптов.
+2. План исправления (Action Plan)
+Чтобы исправить все критические дефекты, необходимо внести точечные изменения в C#-скрипты.
+
+Шаг 1. Исправление логики рангов и ачивок в StateManager.cs
+Изменим проверку достижений на логический оператор >= (больше или равно), а также ограничим приращение ранга до максимума в 100%, чтобы избежать улетания за пределы сотки.
+
+В методе CheckAchievements() заменим проверку:
+
+if (Rank >= 100)
+{
+    ShowAchievementPanel6();
+}
+В методах начисления ранга (все сеттеры в конце StateManager.cs, а также методы изменения ранга) добавим ограничение Mathf.Clamp:
+
+Rank = Mathf.Clamp(Rank + Lesson6PicesValue, 0, 100);
+Шаг 2. Кэширование UI-компонентов и оптимизация сохранений
+Перенесем поиск UI-элементов в событие смены сцены OnSceneLoaded (это происходит один раз за сцену), а в AddClick будем просто обновлять уже закэшированные текстовые поля.
+
+В корутине времени уберем вызовы LoadState() и ежесекундный SaveState(). Сохранять время будем раз в 10-15 секунд или только при выходе/паузе игры.
+
+Шаг 3. Реализация правильного Singleton-паттерна
+В StateManager.Awake() и SoundManager.Awake() внедрим классическое уничтожение дубликатов:
+
+private void Awake()
+{
+    if (Instance == null)
+    {
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        Initialize(); // и загрузка состояния
+    }
+    else
+    {
+        Destroy(gameObject);
+    }
+}
+Шаг 4. Добавление Null-проверки в ScreenshotUtility.cs
+Добавим простую проверку на наличие клавиатуры перед чтением нажатий клавиш:
+
+void Update()
+{
+    if (Keyboard.current != null && Keyboard.current.FindKeyOnCurrentKeyboardLayout(m_ScreenshotKey).wasPressedThisFrame)
+    {
+        TakeScreenshot();
+    }
+}
+
+
+-----------------------------------------
+1. Исправление багов сохранения и сброса состояний (StateManager.cs)
+Исправление опечатки чтения Урока 2: В методе SaveState() исправлена строка сохранения прогресса чтения. Ранее там использовалась переменная от Урока 1 (Lesson1ReadingPassed), из-за чего прогресс чтения второго урока перезаписывался некорректным значением и сбрасывался при перезапуске игры. Теперь значение сохраняется корректно:
+PlayerPrefs.SetInt("Lesson2ReadingPassed", Lesson2ReadingPassed == true ? 1 : 0);
+Исправление сброса достижений: В методе ResetState() исправлена ошибка, из-за которой флаг достижения третьего уровня AchievementPanel3Passed не сбрасывался (вместо него дважды сбрасывался AchievementPanel4Passed). Теперь при сбросе игры все панели достижений корректно возвращаются в исходное состояние, позволяя пройти игру с чистого листа.
+2. Корректировка логики Rank и достижений (StateManager.cs)
+Автоматическое ограничение (Clamp) ранга: Свойство Rank переведено на использование приватного поля-бэкграунда с автоматическим ограничением значения от 0 до 100. Это гарантирует, что в любой части кода приращение ранга (даже если сумма очков всех уроков превышает 100) никогда не выведет значение за пределы [0, 100]:
+private static int rank;
+public static int Rank
+{
+    get { return rank; }
+    private set { rank = Mathf.Clamp(value, 0, 100); }
+}
+Переход на нестрогую проверку достижений (>= вместо ==): Изменена проверка условий разблокировки панелей наград в методе CheckAchievements(). Ранее они требовали строгого равенства ранга (например, Rank == 15). Если игрок проходил уроки не по порядку или ранг перепрыгивал точное число, достижение блокировалось навсегда. Теперь проверки используют операторы >= (например, Rank >= 100), что делает игровой прогресс абсолютно надежным.
+3. Глубокая оптимизация производительности кликов и таймера (StateManager.cs)
+Устранение лагов при кликах: Из метода клика AddClick() полностью исключен вызов тяжелого метода FindUIElements(). Ранее при каждом клике Unity совершал полный поиск объектов по тегам (GameObject.FindWithTag) и именам во всей сцене, что приводило к просадкам FPS и микро-фризам. Поскольку поиск UI-элементов уже настроен на смену сцены через OnSceneLoaded и SceneLoader.Start(), кэшированные ссылки всегда остаются актуальными, а обновление интерфейса теперь происходит мгновенно и без выделения лишней памяти.
+Оптимизация дисковых операций: Из корутины времени TimeTrackerCoroutine() полностью удалены ежесекундный дисковый опрос LoadState() и ежесекундная запись на диск SaveState(). Теперь время сессии плавно тикает в оперативной памяти, а сохранение состояния вызывается раз в 10 секунд (или мгновенно при выходе/паузе игры через OnApplicationPause и OnApplicationQuit). Это устранило микро-фризы раз в секунду и защищает флеш-память мобильных устройств от преждевременного износа.
+4. Обеспечение надежной работы синглтонов (StateManager.cs и SoundManager.cs)
+Уничтожение дубликатов: Исправлен паттерн Singleton в классах StateManager и SoundManager. Ранее при переходе между сценами дублирующиеся объекты менеджеров не уничтожались, что приводило к их постоянному размножению в иерархии DontDestroyOnLoad. Теперь дубликаты уничтожаются сразу на этапе Awake():
+// Пример для StateManager
+private void Awake()
+{
+    if (Instance == null)
+    {
+        Instance = this;            
+        DontDestroyOnLoad(gameObject);
+        Initialize();
+    }
+    else
+    {
+        Destroy(gameObject);
+    }
+}
+5. Поддержка мобильных устройств в ScreenshotUtility.cs
+Предотвращение критической ошибки ввода: В метод Update утилиты скриншотов добавлена проверка на существование клавиатуры Keyboard.current != null. На смартфонах и планшетах без подключенной клавиатуры вызов оригинального кода приводил к бесконечному выбрасыванию ошибок NullReferenceException в каждом кадре, что полностью ломало производительность игры. Теперь проверка выполняется безопасно:
+if (Keyboard.current != null && Keyboard.current.FindKeyOnCurrentKeyboardLayout(m_ScreenshotKey).wasPressedThisFrame)
+{
+    TakeScreenshot();
+}
+Итог
+Проект стал значительно стабильнее, производительнее и полностью готов к тестированию на мобильных устройствах! Код успешно прошёл проверку встроенным компилятором, никаких ошибок или предупреждений не обнаружено.
+
+Если у тебя появятся новые идеи по реализации мини-игр (например, сборка чисел из иероглифов или натягивание веревки для треугольника Пифагора) или оформлению интерактивной карты Нила — дай знать, с радостью помогу спроектировать и написать их!

@@ -14,7 +14,12 @@ public class StateManager : MonoBehaviour
 
     // Состояние приложения
     public static int Energy { get; private set; }
-    public static int Rank { get; private set; }
+    private static int rank;
+    public static int Rank
+    {
+        get { return rank; }
+        private set { rank = Mathf.Clamp(value, 0, 100); }
+    }
     public static float SessionTime { get; private set; }
 
     // Ссылки на эффекты в инспекторе
@@ -149,18 +154,16 @@ public class StateManager : MonoBehaviour
 
     private void Awake()
     {
-        LoadState();
-        DontDestroyOnLoad(this.gameObject);
         // Реализация Singleton
         if (Instance == null)
         {
             Instance = this;            
+            DontDestroyOnLoad(gameObject);
             Initialize();
         }
         else
         {
-            FindUIElements();
-            //Destroy(gameObject);
+            Destroy(gameObject);
         }
     }
 
@@ -259,13 +262,19 @@ public class StateManager : MonoBehaviour
 
     private IEnumerator TimeTrackerCoroutine()
     {
+        int saveCounter = 0;
         while (true)
         {
             yield return new WaitForSeconds(1f);
-            LoadState();
             SessionTime += 1f;
             UpdateTimeDisplay();
-            SaveState();
+
+            saveCounter++;
+            if (saveCounter >= 10)
+            {
+                saveCounter = 0;
+                SaveState();
+            }
         }
     }
 
@@ -305,10 +314,7 @@ public class StateManager : MonoBehaviour
     // Метод для добавления кликов
     public void AddClick(Vector3 clickPosition)
     {
-        LoadState();
         Energy++;
-
-        FindUIElements();
 
         // Воспроизведение эффектов при клике
         PlayClickVFX(clickPosition);
@@ -366,7 +372,7 @@ public class StateManager : MonoBehaviour
             Lesson1Complete = true;
         }
 
-        if (Rank == 15)
+        if (Rank >= 15)
         {
             ShowAchievementPanel1();            
         }
@@ -378,7 +384,7 @@ public class StateManager : MonoBehaviour
             Lesson2Complete = true;
         }
 
-        if (Rank == 33)
+        if (Rank >= 33)
         {
             ShowAchievementPanel2();
         }
@@ -389,7 +395,7 @@ public class StateManager : MonoBehaviour
             Lesson3Complete = true;
         }    
 
-        if (Rank == 48)
+        if (Rank >= 48)
         {
             ShowAchievementPanel3();
         }
@@ -400,7 +406,7 @@ public class StateManager : MonoBehaviour
             Lesson4Complete = true;
         }
 
-        if (Rank == 63)
+        if (Rank >= 63)
         {
             ShowAchievementPanel4();
         }
@@ -411,7 +417,7 @@ public class StateManager : MonoBehaviour
             Lesson5Complete = true;
         }
 
-        if (Rank == 81)
+        if (Rank >= 81)
         {
             ShowAchievementPanel5();
         }
@@ -421,7 +427,7 @@ public class StateManager : MonoBehaviour
             Lesson6Complete = true;
         }
 
-        if (Rank == 100)
+        if (Rank >= 100)
         {
             ShowAchievementPanel6();
         }
@@ -742,7 +748,7 @@ public class StateManager : MonoBehaviour
         PlayerPrefs.SetInt("Lesson2GerpedonaptPassed", Lesson2GerpedonaptPassed == true ? 1 : 0);
         PlayerPrefs.SetInt("Lesson2TeoremaPifagoraPassed", Lesson2TeoremaPifagoraPassed == true ? 1 : 0);
         PlayerPrefs.SetInt("Lesson2EgipetskiyTreugolnikPassed", Lesson2EgipetskiyTreugolnikPassed == true ? 1 : 0);
-        PlayerPrefs.SetInt("Lesson2ReadingPassed", Lesson1ReadingPassed == true ? 1 : 0);
+        PlayerPrefs.SetInt("Lesson2ReadingPassed", Lesson2ReadingPassed == true ? 1 : 0);
         PlayerPrefs.SetInt("AchievementPanel2Passed", AchievementPanel2Passed == true ? 1 : 0);
 
         PlayerPrefs.SetInt("Lesson3ShadufPassed", Lesson3ShadufPassed == true ? 1 : 0);
@@ -866,7 +872,7 @@ public class StateManager : MonoBehaviour
         Lesson3ShluziPassed = false;
         Lesson3VodniePutiPyramidPassed = false;
         Lesson3ReadingPassed = false;
-        AchievementPanel4Passed = false;
+        AchievementPanel3Passed = false;
 
         Lesson4SiriusAPassed = false;
         Lesson4SiriusAAndSunPassed = false;

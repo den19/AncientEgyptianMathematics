@@ -1595,9 +1595,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3417359245729754827}
-        m_TargetAssemblyTypeName: StateManager, Assembly-CSharp
-        m_MethodName: ResetState
+      - m_Target: {fileID: 1896819735}
+        m_TargetAssemblyTypeName: CustomSceneManager, Assembly-CSharp
+        m_MethodName: ResetGameState
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

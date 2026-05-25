@@ -99,7 +99,7 @@ public class ScreenshotUtility : MonoBehaviour
         //    if (Input.GetKeyDown(m_ScreenshotKey.ToLower()))
 
         // But, we will use the new Unity Input System to check for input on the Keyboard
-        if (Keyboard.current.FindKeyOnCurrentKeyboardLayout(m_ScreenshotKey).wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.FindKeyOnCurrentKeyboardLayout(m_ScreenshotKey).wasPressedThisFrame)
         {
             TakeScreenshot();
         }

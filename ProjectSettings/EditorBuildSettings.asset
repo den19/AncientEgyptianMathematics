@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/!Scenes/MainMenu.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/!Scenes/Progress.unity
+    guid: a90fbc15b68a77e4f88474f90f76bd70
+  - enabled: 1
+    path: Assets/!Scenes/Lesson1.unity
+    guid: 8d049d09dda7ffb468a824a21d7c9d9e
+  - enabled: 1
+    path: Assets/!Scenes/Lesson2.unity
+    guid: 1b34847ae55dad5488e4da646b51ebac
+  - enabled: 1
+    path: Assets/!Scenes/Lesson3.unity
+    guid: bb1fbeb0969554c43ad9146f84a9f23e
+  - enabled: 1
+    path: Assets/!Scenes/Lesson4.unity
+    guid: c3bfb1cf203bad54e8364bf0ad3c8e24
+  - enabled: 1
+    path: Assets/!Scenes/Lesson5.unity
+    guid: f4c46f4ecfa0cd9468e38723ce6e5237
+  - enabled: 1
+    path: Assets/!Scenes/Lesson6.unity
+    guid: 69363ae135427704ea3a05d19ad6767f
+  m_configObjects:
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 85fdd745de3b1334e9d1d9627a476ca5, type: 2}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  m_UseUCBPForAssetBundles: 0

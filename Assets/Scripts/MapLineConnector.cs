@@ -12,28 +12,34 @@ public class MapLineConnector : MonoBehaviour
     [Tooltip("The sprite to use for the dots of the dashed line.")]
     public Sprite dotSprite;
 
-    [Tooltip("Color of the dotted path.")]
-    public Color pathColor = new Color(1f, 0.85f, 0.3f, 0.8f); // Золотистый полупрозрачный
+    [Tooltip("Color of the active/unlocked path.")]
+    public Color pathColor = new Color(1f, 0.85f, 0.3f, 0.85f); // Золотистый насыщенный
+
+    [Tooltip("Color of the locked/inactive path.")]
+    public Color lockedPathColor = new Color(0.65f, 0.65f, 0.65f, 0.45f); // Тусклый серый/полупрозрачный
 
     [Tooltip("Size of each dot.")]
-    public float dotSize = 8f;
+    public float dotSize = 10f;
 
     [Tooltip("Spacing between dots in pixels.")]
-    public float dotSpacing = 20f;
+    public float dotSpacing = 24f;
+
+    [Header("Curve Settings")]
+    [Tooltip("How much the path curves dynamically around the Nile river.")]
+    public float curveAmount = 45f;
 
     [Header("Sizing and Parent")]
     [Tooltip("Parent GameObject for instantiated dots (to avoid clutter).")]
     public Transform container;
 
     private List<GameObject> activeDots = new List<GameObject>();
+    private RectTransform pathRect;
+    private Canvas rootCanvas;
 
     private void Start()
     {
         GeneratePath();
     }
-
-    private RectTransform pathRect;
-    private Canvas rootCanvas;
 
     private void Awake()
     {
@@ -59,10 +65,27 @@ public class MapLineConnector : MonoBehaviour
         return localPoint;
     }
 
+    private bool IsSegmentUnlocked(int segmentIndex)
+    {
+        // Сегмент i соединяет Урок i+1 и Урок i+2.
+        // Он считается открытым (золотым), если Урок i+1 уже пройден.
+        // Если StateManager не инициализирован, по умолчанию считаем открытым.
+        if (StateManager.Instance == null) return true;
+
+        switch (segmentIndex)
+        {
+            case 0: return StateManager.Lesson1Complete; // Путь от 1 к 2
+            case 1: return StateManager.Lesson2Complete; // Путь от 2 к 3
+            case 2: return StateManager.Lesson3Complete; // Путь от 3 к 4
+            case 3: return StateManager.Lesson4Complete; // Путь от 4 к 5
+            case 4: return StateManager.Lesson5Complete; // Путь от 5 к 6
+            default: return false;
+        }
+    }
+
     [ContextMenu("Generate Map Path")]
     public void GeneratePath()
     {
-        // Очищаем старые точки перед генерацией
         ClearPath();
 
         if (waypoints == null || waypoints.Count < 2) return;
@@ -85,13 +108,29 @@ public class MapLineConnector : MonoBehaviour
             Vector2 startPos = WaypointToLocalPosition(start);
             Vector2 endPos = WaypointToLocalPosition(end);
 
-            float distance = Vector2.Distance(startPos, endPos);
-            int dotsToCreate = Mathf.Max(1, Mathf.FloorToInt(distance / dotSpacing));
+            // Определяем, открыт ли этот сегмент игроком
+            bool isUnlocked = IsSegmentUnlocked(i);
+            Color segmentColor = isUnlocked ? pathColor : lockedPathColor;
+
+            // Расчет плавной кривой Безье (альтернируем кривизну влево/вправо для красоты)
+            Vector2 dir = endPos - startPos;
+            Vector2 perp = new Vector2(-dir.y, dir.x).normalized;
+            float sideOffset = ((i % 2 == 0) ? 1f : -1f) * curveAmount;
+            Vector2 controlPos = (startPos + endPos) * 0.5f + perp * sideOffset;
+
+            // Приблизительная длина кривой Безье для расчета шага точек
+            float chord = dir.magnitude;
+            float controlHeight = Vector2.Distance((startPos + endPos) * 0.5f, controlPos);
+            float estimatedLength = chord + (controlHeight * 0.5f); // простая аппроксимация
+
+            int dotsToCreate = Mathf.Max(1, Mathf.FloorToInt(estimatedLength / dotSpacing));
 
             for (int d = 1; d < dotsToCreate; d++)
             {
                 float t = (float)d / dotsToCreate;
-                Vector2 spawnPos = Vector2.Lerp(startPos, endPos, t);
+                
+                // Формула квадратичной кривой Безье
+                Vector2 spawnPos = (1f - t) * (1f - t) * startPos + 2f * (1f - t) * t * controlPos + t * t * endPos;
 
                 // Создаем UI-объект точки
                 GameObject dotObj = new GameObject($"Dot_{i}_{d}", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
@@ -103,15 +142,16 @@ public class MapLineConnector : MonoBehaviour
 
                 Image img = dotObj.GetComponent<Image>();
                 img.sprite = dotSprite;
-                img.color = pathColor;
+                img.color = segmentColor;
 
-                // Дополнительно можно повесить на каждую четную точку легкий эффект мерцания
-                if (d % 2 == 0)
+                // Если сегмент разблокирован, добавляем анимацию волшебного мерцания и дыхания
+                if (isUnlocked)
                 {
                     PulsingUI pulsar = dotObj.AddComponent<PulsingUI>();
-                    pulsar.pulseSpeed = 2f;
-                    pulsar.scaleAmount = 0.15f;
-                    pulsar.phaseOffset = d * 0.5f; // Смещение фазы для волны мерцания
+                    // Смещаем фазу в зависимости от позиции, чтобы огоньки "бежали" волной
+                    pulsar.pulseSpeed = 2.5f;
+                    pulsar.scaleAmount = 0.18f;
+                    pulsar.phaseOffset = (i * dotsToCreate + d) * 0.3f;
                 }
 
                 activeDots.Add(dotObj);

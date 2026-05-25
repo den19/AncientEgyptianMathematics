@@ -72,23 +72,85 @@ public class ProgressMapController : MonoBehaviour
 
     private void BuildMap()
     {
-        var content = FindScrollContent();
-        if (content == null)
+        var profileCanvasGo = GameObject.Find("ProfileCanvas");
+        if (profileCanvasGo == null)
         {
-            Debug.LogWarning("ProgressMapController: Content not found, map setup skipped.");
+            Debug.LogWarning("ProgressMapController: ProfileCanvas not found, trying Content fallback.");
+            var content = FindScrollContent();
+            if (content == null)
+            {
+                Debug.LogWarning("ProgressMapController: Content fallback also not found, map setup skipped.");
+                return;
+            }
+
+            ApplyMapBackground(content);
+            var pathRootFallback = CreatePathRoot(content);
+            var nileFallback = CreateNileRiver(content);
+            if (nileFallback != null)
+                nileFallback.transform.SetSiblingIndex(1);
+
+            var waypointsFallback = CollectLessonWaypoints();
+            if (waypointsFallback.Count == 0) return;
+
+            ApplyLandmarks(waypointsFallback);
+            ApplyFloatingToMarkers(waypointsFallback);
+            BuildGoldenPath(pathRootFallback, waypointsFallback);
+
+            if (StateManager.Instance != null)
+            {
+                StateManager.Instance.FindUIElements();
+                StateManager.Instance.RefreshProgressMarkers();
+            }
+            ApplyPulsingToCurrentIcon();
             return;
         }
 
-        ApplyMapBackground(content);
-        var pathRoot = CreatePathRoot(content);
-        var nile = CreateNileRiver(content);
+        var profileCanvasRt = profileCanvasGo.GetComponent<RectTransform>();
+        var layoutTr = profileCanvasRt.Find("Layout") as RectTransform;
+        if (layoutTr == null)
+        {
+            Debug.LogWarning("ProgressMapController: Layout under ProfileCanvas not found!");
+            return;
+        }
+
+        // Навешиваем фон на Background_canvas
+        var bgSprite = ProgressMapAssetLoader.MapBackground ?? ProgressMapAssetLoader.MapBackgroundAlt;
+        if (bgSprite != null)
+        {
+            var bgCanvasTr = profileCanvasRt.Find("Background_canvas");
+            if (bgCanvasTr != null)
+            {
+                var bgImg = bgCanvasTr.GetComponent<Image>();
+                if (bgImg != null)
+                {
+                    bgImg.sprite = bgSprite;
+                    bgImg.type = Image.Type.Simple;
+                    bgImg.preserveAspect = false; // Растягиваем на весь экран
+                    bgImg.color = new Color(0.95f, 0.9f, 0.78f, 1f);
+                    bgImg.raycastTarget = false;
+                }
+            }
+        }
+
+        // Создаем путь и реку под ProfileCanvas, чтобы они были активны и видимы
+        var pathRoot = CreatePathRoot(profileCanvasRt);
+        var nile = CreateNileRiver(profileCanvasRt);
+
+        // Размещаем их сзади кнопок (Layout), но спереди фона
+        int layoutIndex = layoutTr.GetSiblingIndex();
         if (nile != null)
-            nile.transform.SetSiblingIndex(1);
+        {
+            nile.transform.SetSiblingIndex(layoutIndex);
+        }
+        if (pathRoot != null)
+        {
+            pathRoot.transform.SetSiblingIndex(layoutIndex);
+        }
 
         var waypoints = CollectLessonWaypoints();
         if (waypoints.Count == 0)
         {
-            Debug.LogWarning("ProgressMapController: lesson waypoints not found.");
+            Debug.LogWarning("ProgressMapController: No active lesson waypoints found!");
             return;
         }
 

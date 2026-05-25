@@ -21,6 +21,10 @@ public class ProgressMapController : MonoBehaviour
         "Урок VI: Дворец фараона"
     };
 
+    [Header("Debug Settings")]
+    [Tooltip("Активируйте, чтобы временно включить искры над ВСЕМИ уроками для теста в редакторе.")]
+    public bool debugForceShowAllVfx = true;
+
     private bool mapBuilt;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -106,6 +110,17 @@ public class ProgressMapController : MonoBehaviour
         }
 
         var profileCanvasRt = profileCanvasGo.GetComponent<RectTransform>();
+
+        // Переводим ProfileCanvas в режим Screen Space - Camera
+        var canvas = profileCanvasGo.GetComponent<Canvas>();
+        if (canvas != null)
+        {
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = Camera.main;
+            canvas.planeDistance = 10f; // Приближаем UI к камере для высокой четкости рендеринга
+            Debug.Log("[ProgressMapController] ProfileCanvas успешно переведен в режим Screen Space - Camera");
+        }
+
         var layoutTr = profileCanvasRt.Find("Layout") as RectTransform;
         if (layoutTr == null)
         {
@@ -354,9 +369,74 @@ public class ProgressMapController : MonoBehaviour
             targetImage.raycastTarget = true; // Кликабельно, так как это фон
 
             bool complete = IsLessonComplete(wp.Index);
-            targetImage.color = complete
+            targetImage.color = (complete || debugForceShowAllVfx)
                 ? Color.white
                 : new Color(0.75f, 0.75f, 0.75f, 1f); // Немного затемняем заблокированные уроки
+
+            // 3. Если урок пройден, создаем праздничные золотые искры (VFX)
+            if (complete || debugForceShowAllVfx)
+            {
+                ApplyVictoryParticles(wp.Marker);
+            }
+        }
+    }
+
+    private void ApplyVictoryParticles(RectTransform marker)
+    {
+        // Удаляем старые искры если они вдруг были созданы повторно
+        var existingVfx = marker.Find("VictoryVFX");
+        if (existingVfx != null)
+        {
+            Destroy(existingVfx.gameObject);
+        }
+
+        // Загружаем префаб Shiny Item (Loop) из пакета Cartoon FX
+        GameObject prefab = Resources.Load<GameObject>("ProgressMap/CFXR2_ShinyItem");
+        if (prefab == null)
+        {
+            // Пробуем альтернативный путь загрузки из ассетов
+            prefab = Resources.Load<GameObject>("CFXR2 Shiny Item (Loop)");
+        }
+
+        if (prefab != null)
+        {
+            GameObject vfxInstance = Instantiate(prefab, marker, false);
+            vfxInstance.name = "VictoryVFX";
+
+            // Центрируем и слегка выдвигаем вперед по оси Z, чтобы избежать клиппинга
+            var vfxRt = vfxInstance.GetComponent<RectTransform>();
+            if (vfxRt != null)
+            {
+                vfxRt.anchoredPosition3D = new Vector3(0f, 0f, -10f);
+                vfxRt.localScale = Vector3.one * 50f; // Адаптируем масштаб системы под UI
+            }
+            else
+            {
+                vfxInstance.transform.localPosition = new Vector3(0f, 0f, -10f);
+                vfxInstance.transform.localScale = Vector3.one * 50f;
+            }
+
+            // Добавляем наш умный сортировщик частиц, чтобы их было видно поверх Canvas
+            var sorting = vfxInstance.AddComponent<UIParticleSorting>();
+            sorting.sortingOrder = 30; // Выше стандартных элементов UI
+            sorting.sortingLayerName = "UI";
+
+            // Оптимизируем под мобильные платформы
+            var psList = vfxInstance.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (var ps in psList)
+            {
+                var main = ps.main;
+                main.maxParticles = Mathf.Min(main.maxParticles, 15); // Ограничиваем количество частиц для мобилок
+
+                var emission = ps.emission;
+                if (emission.enabled)
+                {
+                    // Делаем испускание нежным и деликатным
+                    var rate = emission.rateOverTime;
+                    rate.constant = Mathf.Min(rate.constant, 5f);
+                    emission.rateOverTime = rate;
+                }
+            }
         }
     }
 

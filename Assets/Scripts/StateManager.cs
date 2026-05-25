@@ -152,6 +152,20 @@ public class StateManager : MonoBehaviour
     public static bool Lesson6Complete;
     private static bool AchievementPanel6Passed;
 
+    // Ссылка на контроллер карты
+    private static ProgressMapController mapController;
+    public static ProgressMapController MapController
+    {
+        get
+        {
+            if (mapController == null)
+            {
+                mapController = FindObjectOfType<ProgressMapController>();
+            }
+            return mapController;
+        }
+    }
+
     private void Awake()
     {
         // Реализация Singleton

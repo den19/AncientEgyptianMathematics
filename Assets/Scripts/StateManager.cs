@@ -250,6 +250,77 @@ public class StateManager : MonoBehaviour
         }
 
         SetProgress(Rank / 100f);
+        RefreshProgressMarkers();
+    }
+
+    /// <summary>
+    /// Показывает стрелку на первом незавершённом уроке; скрывает иконки остальных незавершённых.
+    /// </summary>
+    public void RefreshProgressMarkers()
+    {
+        bool[] complete =
+        {
+            Lesson1Complete,
+            Lesson2Complete,
+            Lesson3Complete,
+            Lesson4Complete,
+            Lesson5Complete,
+            Lesson6Complete
+        };
+
+        int currentLesson = 0;
+        for (int i = 0; i < complete.Length; i++)
+        {
+            if (!complete[i])
+            {
+                currentLesson = i + 1;
+                break;
+            }
+        }
+
+        for (int i = 1; i <= 6; i++)
+        {
+            var iconGo = GameObject.Find("Level" + i + "Icon");
+            if (iconGo == null)
+                continue;
+
+            var image = iconGo.GetComponent<Image>();
+            if (image == null)
+                continue;
+
+            if (complete[i - 1])
+            {
+                image.enabled = true;
+                image.color = Color.white;
+                continue;
+            }
+
+            if (i == currentLesson)
+            {
+                switch (i)
+                {
+                    case 1: SetLevel1IconCurrent(); break;
+                    case 2: SetLevel2IconCurrent(); break;
+                    case 3: SetLevel3IconCurrent(); break;
+                    case 4: SetLevel4IconCurrent(); break;
+                    case 5: SetLevel5IconCurrent(); break;
+                    case 6: SetLevel6IconCurrent(); break;
+                }
+                image.enabled = true;
+                image.color = Color.white;
+            }
+            else
+            {
+                // Показываем золотой ключик для закрытых/заблокированных уровней
+                var goldKey = Resources.Load<Sprite>("ProgressMap/goldKey");
+                if (goldKey != null)
+                {
+                    image.sprite = goldKey;
+                }
+                image.enabled = true;
+                image.color = new Color(1f, 1f, 1f, 0.75f); // Слегка полупрозрачный для заблокированных
+            }
+        }
     }
 
     private void StartTimeTracking()
@@ -586,6 +657,32 @@ public class StateManager : MonoBehaviour
         }
     }
 
+    public void SetLevel5IconCurrent()
+    {
+        var level5Icon = GameObject.Find("Level5Icon");
+        if (level5Icon != null)
+        {
+            var imageComponent = level5Icon.GetComponent<Image>();
+            if (imageComponent != null && currenLevelIcon != null)
+            {
+                imageComponent.sprite = currenLevelIcon;
+            }
+        }
+    }
+
+    public void SetLevel6IconCurrent()
+    {
+        var level6Icon = GameObject.Find("Level6Icon");
+        if (level6Icon != null)
+        {
+            var imageComponent = level6Icon.GetComponent<Image>();
+            if (imageComponent != null && currenLevelIcon != null)
+            {
+                imageComponent.sprite = currenLevelIcon;
+            }
+        }
+    }
+
     private void PlayEnergy10VFX()
     {
         if (energy10VFX != null)
@@ -904,6 +1001,7 @@ public class StateManager : MonoBehaviour
         UpdateTimeDisplay();
         UpdateEnergyDisplay();
         UpdateRankDisplay();
+        RefreshProgressMarkers();
     }
 
     // Метод для получения текущего Rank

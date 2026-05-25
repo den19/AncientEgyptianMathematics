@@ -80,6 +80,43 @@ public class CustomSceneManager : MonoBehaviour
         }
     }
 
+    public void StartCurrentLesson()
+    {
+        string targetLesson = "Lesson1";
+
+        if (!StateManager.Lesson1Complete)
+        {
+            targetLesson = "Lesson1";
+        }
+        else if (!StateManager.Lesson2Complete)
+        {
+            targetLesson = "Lesson2";
+        }
+        else if (!StateManager.Lesson3Complete)
+        {
+            targetLesson = "Lesson3";
+        }
+        else if (!StateManager.Lesson4Complete)
+        {
+            targetLesson = "Lesson4";
+        }
+        else if (!StateManager.Lesson5Complete)
+        {
+            targetLesson = "Lesson5";
+        }
+        else if (!StateManager.Lesson6Complete)
+        {
+            targetLesson = "Lesson6";
+        }
+        else
+        {
+            targetLesson = "Lesson6";
+        }
+
+        Debug.Log($"[AutoRouter] Первый незавершенный урок: {targetLesson}. Запускаем...");
+        LoadScene(targetLesson);
+    }
+
     public void ExitApp()
     {
 #if UNITY_EDITOR

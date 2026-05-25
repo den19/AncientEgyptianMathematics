@@ -93,7 +93,6 @@ public class ProgressMapController : MonoBehaviour
         }
 
         ApplyLandmarks(waypoints);
-        ApplyLessonLabels(waypoints);
         ApplyFloatingToMarkers(waypoints);
         BuildGoldenPath(pathRoot, waypoints);
 
@@ -310,49 +309,6 @@ public class ProgressMapController : MonoBehaviour
             case 5: return StateManager.Lesson5Complete;
             case 6: return StateManager.Lesson6Complete;
             default: return false;
-        }
-    }
-
-    private void ApplyLessonLabels(List<LessonWaypoint> waypoints)
-    {
-        foreach (var wp in waypoints)
-        {
-            int titleIndex = wp.Index - 1;
-            if (titleIndex < 0 || titleIndex >= LessonTitles.Length)
-                continue;
-
-            var labelTr = wp.Marker.Find("LessonLabel");
-            Text label;
-            if (labelTr == null)
-            {
-                var labelGo = new GameObject("LessonLabel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
-                labelGo.transform.SetParent(wp.Marker, false);
-
-                var rt = labelGo.GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(0.5f, 0f);
-                rt.anchorMax = new Vector2(0.5f, 0f);
-                rt.pivot = new Vector2(0.5f, 1f);
-                rt.sizeDelta = new Vector2(260f, 48f);
-                rt.anchoredPosition = new Vector2(0f, -78f);
-
-                label = labelGo.GetComponent<Text>();
-                label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                label.alignment = TextAnchor.MiddleCenter;
-                label.fontSize = 22;
-                label.horizontalOverflow = HorizontalWrapMode.Wrap;
-                label.verticalOverflow = VerticalWrapMode.Truncate;
-                label.raycastTarget = false;
-            }
-            else
-            {
-                label = labelTr.GetComponent<Text>();
-            }
-
-            if (label == null)
-                continue;
-
-            label.text = LessonTitles[titleIndex];
-            label.color = new Color(0.35f, 0.28f, 0.15f, 1f);
         }
     }
 

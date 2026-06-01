@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 796cf3dd7aaeb2b4cabdb69944b3ec1a
+guid: 890c31d480f042ae924a07b4f78a88db
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4364034832326165938
-    second: bg_0
+      213: 5719130028313736775
+    second: lesson4-bg_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bg_0
+      name: lesson4-bg_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 4368
-        height: 2912
+        width: 2048
+        height: 1152
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e4a74cf0175df63c0800000000000000
-      internalID: -4364034832326165938
+      spriteID: 746f8e1a57e6e5f40800000000000000
+      internalID: 5719130028313736775
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bg_0: -4364034832326165938
+      lesson4-bg_0: 5719130028313736775
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

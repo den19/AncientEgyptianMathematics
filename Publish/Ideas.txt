@@ -49,3 +49,7 @@ Dot Size: 8 (размер точек).
 
 
 Cartoon FX Remastered Free
+
+Атрибуция изображений:
+MainMenu background (pnlBg): Edfu Temple reliefs by MatthiasKabel, CC BY-SA 3.0, via Wikimedia Commons (https://commons.wikimedia.org/wiki/File:Edfu_Temple_032010_21.jpg)
+Lesson1 background (MainCanvas/Background_canvas): Edfu Egyptian numerals by Ad Meskens, CC BY-SA 3.0, via Wikimedia Commons (https://commons.wikimedia.org/wiki/File:Edfu_Egyptian_numerals.JPG)

@@ -153,8 +153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 531.5, y: -3981}
-  m_SizeDelta: {x: 1023, y: 7922}
+  m_AnchoredPosition: {x: 531.5, y: -5436.286}
+  m_SizeDelta: {x: 1023, y: 10832.572}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &15518877
 MonoBehaviour:
@@ -178,11 +178,11 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 50
+    m_FontSize: 60
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
-    m_MaxSize: 50
+    m_MaxSize: 60
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -417,7 +417,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 531.5, y: -8059.5}
+  m_AnchoredPosition: {x: 531.5, y: -10970.072}
   m_SizeDelta: {x: 1023, y: 215}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &274526272
@@ -2707,7 +2707,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1474608605401521594}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.12618524
+  m_Size: 0.100230865
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3107,7 +3107,7 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2230450774830151397}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.87381476}
+  m_AnchorMin: {x: 0, y: 0.8997691}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -3449,8 +3449,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 8053.298}
+  m_AnchoredPosition: {x: 0, y: -0.00012207031}
+  m_SizeDelta: {x: 0, y: 10439.808}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &2884719957924583324
 GameObject:
@@ -5235,11 +5235,11 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 50
+    m_FontSize: 70
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 5
-    m_MaxSize: 60
+    m_MaxSize: 70
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1

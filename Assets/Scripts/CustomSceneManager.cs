@@ -11,7 +11,14 @@ public class CustomSceneManager : MonoBehaviour
 
     private void Awake()
     {
-        
+        if (instance == null)
+            instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+            instance = null;
     }
 
     // Свойство для обращения к экземпляру
@@ -121,24 +128,41 @@ public class CustomSceneManager : MonoBehaviour
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-#elif UNITY_ANDROID
+        return;
+#endif
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        // finishAndRemoveTask alone can leave the Unity process alive; the next launch
+        // then skips splash screens and can hang on a dark/empty frame (GameActivity).
+        // Kill the process after finishing so every launch is a clean cold start.
         try
         {
-            using (var jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
             {
-                using (var activity = jc.GetStatic<AndroidJavaObject>("currentActivity"))
-                {
+                var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+                if (activity != null)
                     activity.Call("finishAndRemoveTask");
-                }
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogError("Ошибка при нативном закрытии приложения: " + e.Message);
-            Application.Quit();
+            Debug.LogError("Ошибка при finishAndRemoveTask: " + e.Message);
         }
-#else
-        Application.Quit();
+
+        try
+        {
+            using (var process = new AndroidJavaClass("android.os.Process"))
+            {
+                int pid = process.CallStatic<int>("myPid");
+                process.CallStatic("killProcess", pid);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Ошибка при killProcess: " + e.Message);
+        }
 #endif
+
+        Application.Quit();
     }
 }

@@ -1,10 +1,11 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
 /// Shows Application.version at the bottom of MainMenu using an Itten-inspired
-/// warm/cool palette (sand/gold + nile teal), soft contrast without pure black.
+/// warm/cool palette (sand/gold + nile teal). Sized for tall phones (Constant Pixel Size canvas).
 /// </summary>
 public sealed class MainMenuVersionLabel : MonoBehaviour
 {
@@ -13,10 +14,10 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
     const string SceneName = "MainMenu";
 
     // Itten warm–cool harmony (matches marketing posters for this app).
-    static readonly Color GoldSoft = new Color(255f / 255f, 228f / 255f, 150f / 255f, 1f);
-    static readonly Color Nile = new Color(74f / 255f, 168f / 255f, 170f / 255f, 0.72f);
-    static readonly Color InkSoft = new Color(62f / 255f, 48f / 255f, 36f / 255f, 0.95f);
-    static readonly Color SandBand = new Color(245f / 255f, 230f / 255f, 200f / 255f, 0.38f);
+    static readonly Color Gold = new Color(1f, 0.92f, 0.55f, 1f);
+    static readonly Color Nile = new Color(74f / 255f, 168f / 255f, 170f / 255f, 0.85f);
+    static readonly Color Ink = new Color(48f / 255f, 36f / 255f, 26f / 255f, 1f);
+    static readonly Color SandBand = new Color(36f / 255f, 28f / 255f, 20f / 255f, 0.55f);
 
     static Sprite s_WhiteSprite;
 
@@ -39,8 +40,23 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         host.transform.SetAsLastSibling();
     }
 
-    void Start()
+    void OnEnable()
     {
+        StartCoroutine(LayoutWhenReady());
+    }
+
+    void OnRectTransformDimensionsChange()
+    {
+        if (isActiveAndEnabled)
+            EnsureLabel();
+    }
+
+    IEnumerator LayoutWhenReady()
+    {
+        // Safe area / canvas pixel rect often settle a frame or two after first load on Android.
+        yield return null;
+        EnsureLabel();
+        yield return new WaitForEndOfFrame();
         EnsureLabel();
     }
 
@@ -50,14 +66,21 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         if (canvasRoot == null)
             return;
 
-        var rect = GetComponent<RectTransform>();
-        float bottomInset = ResolveBottomSafeInset(canvasRoot);
+        float canvasHeight = canvasRoot.rect.height;
+        if (canvasHeight < 2f)
+            canvasHeight = Screen.height > 0 ? Screen.height : 1920f;
 
+        // Absolute pixels on MainMenu (Constant Pixel Size). Keep readable on tall phones.
+        int fontSize = Mathf.Clamp(Mathf.RoundToInt(canvasHeight * 0.028f), 40, 72);
+        float bandHeight = fontSize * 2.6f;
+        float bottomInset = ResolveBottomSafeInset(canvasRoot, canvasHeight);
+
+        var rect = GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 0f);
         rect.anchorMax = new Vector2(1f, 0f);
         rect.pivot = new Vector2(0.5f, 0f);
         rect.anchoredPosition = new Vector2(0f, bottomInset);
-        rect.sizeDelta = new Vector2(0f, 84f);
+        rect.sizeDelta = new Vector2(0f, bandHeight);
         rect.localScale = Vector3.one;
         rect.localRotation = Quaternion.identity;
 
@@ -71,27 +94,27 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
 
         var text = EnsureText();
         text.text = "v" + Application.version;
-        text.fontSize = 42;
+        text.fontSize = fontSize;
         text.fontStyle = FontStyle.Bold;
         text.alignment = TextAnchor.MiddleCenter;
-        text.color = GoldSoft;
+        text.color = Gold;
         text.raycastTarget = false;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.resizeTextForBestFit = false;
 
-        // Warm outline + cool accent for stronger light–dark contrast (Itten).
         var outline = text.GetComponent<Outline>();
         if (outline == null)
             outline = text.gameObject.AddComponent<Outline>();
-        outline.effectColor = InkSoft;
-        outline.effectDistance = new Vector2(1.8f, -1.8f);
+        outline.effectColor = Ink;
+        outline.effectDistance = new Vector2(2.2f, -2.2f);
         outline.useGraphicAlpha = true;
 
         var accent = text.GetComponent<Shadow>();
         if (accent == null)
             accent = text.gameObject.AddComponent<Shadow>();
         accent.effectColor = Nile;
-        accent.effectDistance = new Vector2(0f, 2.2f);
+        accent.effectDistance = new Vector2(0f, 2.5f);
         accent.useGraphicAlpha = true;
     }
 
@@ -102,7 +125,15 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         {
             var t = existing.GetComponent<Text>();
             if (t != null)
+            {
+                var existingRect = existing.GetComponent<RectTransform>();
+                existingRect.anchorMin = Vector2.zero;
+                existingRect.anchorMax = Vector2.one;
+                // Leave room for outline so glyphs are not clipped by the band height.
+                existingRect.offsetMin = new Vector2(16f, 10f);
+                existingRect.offsetMax = new Vector2(-16f, -10f);
                 return t;
+            }
         }
 
         var go = new GameObject(LabelObjectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
@@ -112,8 +143,8 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         var labelRect = go.GetComponent<RectTransform>();
         labelRect.anchorMin = Vector2.zero;
         labelRect.anchorMax = Vector2.one;
-        labelRect.offsetMin = new Vector2(24f, 6f);
-        labelRect.offsetMax = new Vector2(-24f, -6f);
+        labelRect.offsetMin = new Vector2(16f, 10f);
+        labelRect.offsetMax = new Vector2(-16f, -10f);
         labelRect.pivot = new Vector2(0.5f, 0.5f);
 
         var text = go.GetComponent<Text>();
@@ -123,19 +154,16 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         return text;
     }
 
-    static float ResolveBottomSafeInset(RectTransform canvasRoot)
+    static float ResolveBottomSafeInset(RectTransform canvasRoot, float canvasHeight)
     {
-        if (canvasRoot == null || Screen.height <= 0)
-            return 18f;
-
-        float canvasHeight = canvasRoot.rect.height;
-        if (canvasHeight <= 1f)
-            return 18f;
+        if (Screen.height <= 0)
+            return 24f;
 
         Rect safe = Screen.safeArea;
         float bottomPixels = Mathf.Max(0f, safe.yMin);
         float inset = bottomPixels * (canvasHeight / Screen.height);
-        return Mathf.Max(18f, inset + 8f);
+        // Keep label above gesture/nav bar with a comfortable margin.
+        return Mathf.Max(24f, inset + 16f);
     }
 
     static Sprite GetWhiteSprite()

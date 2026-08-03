@@ -109,4 +109,10 @@ public class SoundManager : MonoBehaviour
             Debug.LogWarning($"Sound '{name}' already exists in library!");
         }
     }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
 }

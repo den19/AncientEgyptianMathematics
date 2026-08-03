@@ -1030,6 +1030,7 @@ public class StateManager : MonoBehaviour
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SaveState();
+            Instance = null;
         }
     }
 

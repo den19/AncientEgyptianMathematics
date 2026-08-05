@@ -20,9 +20,13 @@ public class ClickHandler : MonoBehaviour
     private Vector3 GetClickWorldPosition()
     {
         // Для 2D игры
+        Camera cam = Camera.main;
+        if (cam == null)
+            return Vector3.zero;
+
         Vector3 mousePos = Input.mousePosition;
-        mousePos.z = -Camera.main.transform.position.z;
-        return Camera.main.ScreenToWorldPoint(mousePos);
+        mousePos.z = -cam.transform.position.z;
+        return cam.ScreenToWorldPoint(mousePos);
 
         // Для 3D игры раскомментируйте следующее:
         // Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

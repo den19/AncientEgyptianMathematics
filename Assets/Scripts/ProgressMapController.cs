@@ -23,7 +23,7 @@ public class ProgressMapController : MonoBehaviour
 
     [Header("Debug Settings")]
     [Tooltip("Активируйте, чтобы временно включить искры над ВСЕМИ уроками для теста в редакторе.")]
-    public bool debugForceShowAllVfx = true;
+    public bool debugForceShowAllVfx = false;
 
     private bool mapBuilt;
 

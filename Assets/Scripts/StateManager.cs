@@ -56,6 +56,8 @@ public class StateManager : MonoBehaviour
     private TextMeshProUGUI rankText;
     private AudioSource audioSource;
     
+    private const float SfxVolume = 0.25f;
+
     // Состояния Lesson1
     public static bool Lesson1Complete;
     private static bool AchievementPanel1Passed;
@@ -193,6 +195,8 @@ public class StateManager : MonoBehaviour
 
         // Загрузка сохраненных данных
         LoadState();
+        SuppressMissedAchievementPanels();
+        SaveState();
 
         // Подписка на событие смены сцены
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -431,7 +435,7 @@ public class StateManager : MonoBehaviour
     {
         if (clickSFX != null && audioSource != null)
         {
-            audioSource.PlayOneShot(clickSFX);
+            audioSource.PlayOneShot(clickSFX, SfxVolume);
         }
     }
 
@@ -451,22 +455,11 @@ public class StateManager : MonoBehaviour
             PlayEnergy20SFX();
         }
 
-        if (Lesson1AlikvotnieDrobiPassed && Lesson1EdiniciDecatkiSotniPassed &&
-            Lesson1PrimeriPassed && Lesson1TiciachiPassed && Lesson1ReadingPassed)
-        {
-            Lesson1Complete = true;
-        }
+        UpdateLessonCompletionFlags();
 
         if (Rank >= 15)
         {
             ShowAchievementPanel1();            
-        }
-
-        if (Lesson2EgipetskiyTreugolnikPassed && Lesson2GerpedonaptPassed && 
-            Lesson2ProblemaPloshadiUchastkaPassed && Lesson2RazvlivNilaPassed && Lesson2TeoremaPifagoraPassed &&
-            Lesson2ReadingPassed)
-        {
-            Lesson2Complete = true;
         }
 
         if (Rank >= 33)
@@ -474,21 +467,9 @@ public class StateManager : MonoBehaviour
             ShowAchievementPanel2();
         }
 
-        if (Lesson3ShadufPassed && Lesson3ShluziPassed && Lesson3VodniePutiPyramidPassed &&
-            Lesson3PodemVodiCherezShadufPassed && Lesson3ReadingPassed)
-        {
-            Lesson3Complete = true;
-        }    
-
         if (Rank >= 48)
         {
             ShowAchievementPanel3();
-        }
-
-        if (Lesson4SiriusAPassed && Lesson4SiriusAAndSunPassed && Lesson4DvoynayaZvezdaPassed &&
-            Lesson4SozvezdieBolshoyPesPassed && Lesson4ReadingPassed)
-        {
-            Lesson4Complete = true;
         }
 
         if (Rank >= 63)
@@ -496,20 +477,9 @@ public class StateManager : MonoBehaviour
             ShowAchievementPanel4();
         }
 
-        if (Lesson5MoscowMathPapirusPassed && Lesson5PapirusAhmesaPassed && Lesson5EgypetskayaPloshadChetirehugolnikaPassed &&
-            Lesson5ChisloPiPassed && Lesson5KakPoyavilosChisloPiPassed && Lesson5ReadingPassed)
-        {
-            Lesson5Complete = true;
-        }
-
         if (Rank >= 81)
         {
             ShowAchievementPanel5();
-        }
-
-        if (Lesson6PicesPassed && Lesson6ReadingPassed)
-        {
-            Lesson6Complete = true;
         }
 
         if (Rank >= 100)
@@ -521,6 +491,45 @@ public class StateManager : MonoBehaviour
         if (Energy == 30)
         {
             PlayEnergy30SFX();
+        }
+    }
+
+    private static void UpdateLessonCompletionFlags()
+    {
+        if (Lesson1AlikvotnieDrobiPassed && Lesson1EdiniciDecatkiSotniPassed &&
+            Lesson1PrimeriPassed && Lesson1TiciachiPassed && Lesson1ReadingPassed)
+        {
+            Lesson1Complete = true;
+        }
+
+        if (Lesson2EgipetskiyTreugolnikPassed && Lesson2GerpedonaptPassed &&
+            Lesson2ProblemaPloshadiUchastkaPassed && Lesson2RazvlivNilaPassed && Lesson2TeoremaPifagoraPassed &&
+            Lesson2ReadingPassed)
+        {
+            Lesson2Complete = true;
+        }
+
+        if (Lesson3ShadufPassed && Lesson3ShluziPassed && Lesson3VodniePutiPyramidPassed &&
+            Lesson3PodemVodiCherezShadufPassed && Lesson3ReadingPassed)
+        {
+            Lesson3Complete = true;
+        }
+
+        if (Lesson4SiriusAPassed && Lesson4SiriusAAndSunPassed && Lesson4DvoynayaZvezdaPassed &&
+            Lesson4SozvezdieBolshoyPesPassed && Lesson4ReadingPassed)
+        {
+            Lesson4Complete = true;
+        }
+
+        if (Lesson5MoscowMathPapirusPassed && Lesson5PapirusAhmesaPassed && Lesson5EgypetskayaPloshadChetirehugolnikaPassed &&
+            Lesson5ChisloPiPassed && Lesson5KakPoyavilosChisloPiPassed && Lesson5ReadingPassed)
+        {
+            Lesson5Complete = true;
+        }
+
+        if (Lesson6PicesPassed && Lesson6ReadingPassed)
+        {
+            Lesson6Complete = true;
         }
     }
 
@@ -711,7 +720,7 @@ public class StateManager : MonoBehaviour
     {
         if (energy10SFX != null && audioSource != null)
         {
-            audioSource.PlayOneShot(energy10SFX);
+            audioSource.PlayOneShot(energy10SFX, SfxVolume);
         }
     }
 
@@ -729,7 +738,7 @@ public class StateManager : MonoBehaviour
     {
         if (energy20SFX != null && audioSource != null)
         {
-            audioSource.PlayOneShot(energy20SFX);
+            audioSource.PlayOneShot(energy20SFX, SfxVolume);
         }
     }
 
@@ -737,7 +746,7 @@ public class StateManager : MonoBehaviour
     {
         if (energy30SFX != null && audioSource != null)
         {
-            audioSource.PlayOneShot(energy30SFX);
+            audioSource.PlayOneShot(energy30SFX, SfxVolume);
         }
     }
 
@@ -953,6 +962,29 @@ public class StateManager : MonoBehaviour
         Lesson4Complete = PlayerPrefs.GetInt("Lesson4Complete", 0) == 1 ? true : false;
         Lesson5Complete = PlayerPrefs.GetInt("Lesson5Complete", 0) == 1 ? true : false;
         Lesson6Complete = PlayerPrefs.GetInt("Lesson6Complete", 0) == 1 ? true : false;
+
+        // Repair Complete flags from subsection progress (covers saves written before CheckAchievements).
+        UpdateLessonCompletionFlags();
+    }
+
+    /// <summary>
+    /// Marks achievement panels as already shown when Rank already meets thresholds,
+    /// so upgrading users do not get catch-up Win popups on the next click.
+    /// </summary>
+    private void SuppressMissedAchievementPanels()
+    {
+        if (Rank >= 15)
+            AchievementPanel1Passed = true;
+        if (Rank >= 33)
+            AchievementPanel2Passed = true;
+        if (Rank >= 48)
+            AchievementPanel3Passed = true;
+        if (Rank >= 63)
+            AchievementPanel4Passed = true;
+        if (Rank >= 81)
+            AchievementPanel5Passed = true;
+        if (Rank >= 100)
+            AchievementPanel6Passed = true;
     }
 
     // Сброс состояния (опционально)
@@ -1053,8 +1085,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson2RazvlivNilaPassed = true;
             Rank += Lesson2RazvlivNilaValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1064,8 +1096,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson2ProblemaPloshadiUchastkaPassed = true;
             Rank += Lesson2ProblemaPloshadiUchastkaValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1075,8 +1107,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson2GerpedonaptPassed = true;
             Rank += Lesson2GerpedonaptValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1086,8 +1118,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson2TeoremaPifagoraPassed = true;
             Rank += Lesson2TeoremaPifagoraValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1097,8 +1129,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson2EgipetskiyTreugolnikPassed = true;
             Rank += Lesson2EgipetskiyTreugolnikValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1108,6 +1140,7 @@ public class StateManager : MonoBehaviour
         {
             Lesson2ReadingPassed = true;
             Rank += Lesson2ReadingValue;
+            CheckAchievements();
             SaveState();
         }
     }
@@ -1118,8 +1151,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson1EdiniciDecatkiSotniPassed = true;
             Rank += Lesson1EdiniciDecatkiSotniValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
     public void Notation1TiciachiSetter()
@@ -1128,6 +1161,7 @@ public class StateManager : MonoBehaviour
         {
             Lesson1TiciachiPassed = true;
             Rank += Lesson1TiciachiValue;
+            CheckAchievements();
             SaveState();
         }
     }
@@ -1138,6 +1172,7 @@ public class StateManager : MonoBehaviour
         {
             Lesson1AlikvotnieDrobiPassed = true;
             Rank += Lesson1AlikvotnieDrobiValue;
+            CheckAchievements();
             SaveState();
         }
     }
@@ -1149,6 +1184,7 @@ public class StateManager : MonoBehaviour
         {
             Lesson1PrimeriPassed = true;
             Rank += Lesson1PrimeriValue;
+            CheckAchievements();
             SaveState();
         }
     }
@@ -1159,6 +1195,7 @@ public class StateManager : MonoBehaviour
         {
             Lesson1ReadingPassed = true;
             Rank += Lesson1ReadingValue;
+            CheckAchievements();
             SaveState();
         }
     }
@@ -1169,8 +1206,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson3ShadufPassed = true;
             Rank += Lesson3ShadufValue;
-             SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1180,8 +1217,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson3PodemVodiCherezShadufPassed = true;
             Rank += Lesson3PodemVodiCherezShadufValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1191,8 +1228,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson3ShluziPassed = true;
             Rank += Lesson3ShluziValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1202,8 +1239,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson3VodniePutiPyramidPassed = true;
             Rank += Lesson3VodniePutiPyramidValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1213,8 +1250,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson3ReadingPassed = true;
             Rank += Lesson3ReadingValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1224,8 +1261,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson4SiriusAPassed = true;
             Rank += Lesson4SiriusValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1235,8 +1272,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson4SiriusAAndSunPassed = true;
             Rank += Lesson4SiriusAAndSunValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1246,8 +1283,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson4DvoynayaZvezdaPassed = true;
             Rank += Lesson4DvoynayaZvezdaValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1257,8 +1294,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson4SozvezdieBolshoyPesPassed = true;
             Rank += Lesson4SozvezdieBolshoyPesValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1268,8 +1305,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson4ReadingPassed = true;
             Rank += Lesson4ReadingValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1279,8 +1316,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5MoscowMathPapirusPassed = true;
             Rank += Lesson5MoscowMathPapirusValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1290,8 +1327,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5PapirusAhmesaPassed = true;
             Rank += Lesson5PapirusAhmesaValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1301,8 +1338,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5EgypetskayaPloshadChetirehugolnikaPassed = true;
             Rank += Lesson5EgypetskayaPloshadChetirehugolnikaValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1312,8 +1349,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5ChisloPiPassed = true;
             Rank += Lesson5ChisloPiValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1323,8 +1360,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5KakPoyavilosChisloPiPassed = true;
             Rank += Lesson5KakPoyavilosChisloPiValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1334,8 +1371,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson5ReadingPassed = true;
             Rank += Lesson5ReadingValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1345,8 +1382,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson6PicesPassed = true;
             Rank += Lesson6PicesValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 
@@ -1356,8 +1393,8 @@ public class StateManager : MonoBehaviour
         {
             Lesson6ReadingPassed = true;
             Rank += Lesson6ReadingValue;
-            SaveState();
             CheckAchievements();
+            SaveState();
         }
     }
 }

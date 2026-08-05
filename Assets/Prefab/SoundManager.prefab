@@ -145,5 +145,5 @@ MonoBehaviour:
   buttonClickSound: {fileID: 8300000, guid: f10e7ff812627164fa39911459400577, type: 3}
   buttonHoverSound: {fileID: 8300000, guid: 7b21b50f27a95224fa10e8f962ae17af, type: 3}
   buttonDisabledSound: {fileID: 8300000, guid: 3eab95774fe317a489c29e1075d3d6a2, type: 3}
-  masterVolume: 1
+  masterVolume: 0.25
   uiVolume: 0.8

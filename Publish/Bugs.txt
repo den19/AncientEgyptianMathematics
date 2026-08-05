@@ -258,3 +258,56 @@ if (Keyboard.current != null && Keyboard.current.FindKeyOnCurrentKeyboardLayout(
 Проект стал значительно стабильнее, производительнее и полностью готов к тестированию на мобильных устройствах! Код успешно прошёл проверку встроенным компилятором, никаких ошибок или предупреждений не обнаружено.
 
 Если у тебя появятся новые идеи по реализации мини-игр (например, сборка чисел из иероглифов или натягивание веревки для треугольника Пифагора) или оформлению интерактивной карты Нила — дай знать, с радостью помогу спроектировать и написать их!
+
+-----------------------------------------
+Аудит критических багов (2026-08) — найденные дефекты и исправления
+Версия после фиксов: bundleVersion 1.0.11 / AndroidBundleVersionCode 11 (bump при release-сборке).
+Сейв PlayerPrefs совместим с прошлыми версиями (adb install -r сохраняет прогресс).
+
+1. Soft-lock прогресса Lesson 1 / Lesson 2 Reading
+Проблема: флаг Lesson*Complete выставлялся только в CheckAchievements(), но сеттеры
+Notation1TiciachiSetter, Notation1AlikvotnieDrobiSetter, Notation1PrimeriSetter,
+Notation1ReadingSetter и Notation2ReadingSetter его не вызывали. После прохождения всех
+подтем Lesson 1 Complete оставался false → StartCurrentLesson() снова открывал Lesson 1.
+Исправление: во всех Notation*Setter порядок CheckAchievements() → SaveState().
+Логика Complete вынесена в UpdateLessonCompletionFlags().
+
+2. LessonComplete сохранялся до вычисления / не чинился при Load
+Проблема: типичный порядок был SaveState() затем CheckAchievements(), поэтому в PlayerPrefs
+мог остаться Complete=false при всех подтемах true. LoadState() не пересчитывал Complete.
+Исправление: Check → Save в сеттерах; в конце LoadState() вызывается UpdateLessonCompletionFlags().
+
+3. Кнопка «Обнулить счёт» (btnOptions) стирала прогресс без подтверждения
+Проблема: OnClick сразу вызывал ResetGameState() / ResetState() — полный wipe без диалога.
+Исправление: btnOptions → CustomSceneManager.RequestResetGameState() — runtime-диалог
+«Сбросить весь прогресс?» с кнопками «Да» / «Отмена»; wipe только по «Да» (полный ResetState).
+
+4. debugForceShowAllVfx = true на карте прогресса
+Проблема: ProgressMapController рисовал все уроки как пройденные (белый цвет + victory VFX).
+Исправление: debugForceShowAllVfx = false по умолчанию (контроллер создаётся в runtime).
+
+5. NullReferenceException в ClickHandler при отсутствии MainCamera
+Проблема: Camera.main использовался без null-check.
+Исправление: ранний return Vector3.zero, если камеры нет.
+
+6. Catch-up Win-панели после обновления у старых пользователей
+Проблема: при Rank уже выше порогов, но AchievementPanel*Passed = false, первый клик после
+обновления мог внезапно показать Win1…Win6.
+Исправление: в Initialize() после LoadState() — SuppressMissedAchievementPanels() + SaveState():
+панели с уже достигнутым Rank помечаются просмотренными без Instantiate.
+
+7. Громкость SFX
+Изменение UX: SoundManager.masterVolume = 0.25 (код + Prefab/SoundManager.prefab);
+StateManager click/energy PlayOneShot используют SfxVolume = 0.25f.
+
+Сайд-эффекты обновления для уже установленных APK
+- Прогресс с «залипшим» LessonComplete чинится при первом запуске (Load + UpdateLessonCompletionFlags).
+- Карта прогресса показывает реальный статус (без фейкового «всё пройдено»).
+- Win-панели за уже достигнутый Rank не всплывают повторно.
+- «Обнулить счёт» требует подтверждения; полный сброс по-прежнему доступен.
+- Звуки тише (~25% прежней громкости).
+
+Известные средние (не исправлялись в этом аудите)
+- WaterEffectUI: UV-скролл почти не накапливается (смещение от начального uvRect + один deltaTime).
+- FormatTime: после 24ч сессии часы показываются как time.Hours (0–23), не TotalHours.
+- Сумма очков уроков ~103 при clamp Rank до 100 (финальные очки Lesson 6 частично отбрасываются; панели по >= работают).

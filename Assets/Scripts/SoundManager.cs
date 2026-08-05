@@ -11,7 +11,7 @@ public class SoundManager : MonoBehaviour
     public AudioClip buttonDisabledSound;
 
     [Header("Settings")]
-    [Range(0f, 1f)] public float masterVolume = 1f;
+    [Range(0f, 1f)] public float masterVolume = 0.25f;
     [Range(0f, 1f)] public float uiVolume = 0.8f;
 
     private AudioSource audioSource;

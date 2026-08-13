@@ -46,9 +46,15 @@ namespace Bfree
         }
         private void Start()
         {
-            activeNavbarImage.color = activeNavigationButtonColor;
-            navigationHistory.Add(activeCanvas);
-            navigationHistoryImages.Add(activeNavbarImage);
+            // Progress / game scenes may leave navbar refs unset when only PanelSpawner is used.
+            if (activeNavbarImage != null)
+                activeNavbarImage.color = activeNavigationButtonColor;
+
+            if (activeCanvas != null)
+                navigationHistory.Add(activeCanvas);
+
+            if (activeNavbarImage != null)
+                navigationHistoryImages.Add(activeNavbarImage);
         }
         private void Update()
         {
@@ -141,25 +147,28 @@ namespace Bfree
             navigationHistory.RemoveAt(navigationHistory.Count - 1);
             OpenCanvas(activeCanvas);
 
-            //Set image from history
-            activeNavbarImage.color = inactiveNavigationButtonColor;
-            activeNavbarImage = navigationHistoryImages[navigationHistoryImages.Count - 2];
-            activeNavbarImage.color = activeNavigationButtonColor;
-            navigationHistoryImages.RemoveAt(navigationHistoryImages.Count - 1);
+            if (activeNavbarImage != null)
+                activeNavbarImage.color = inactiveNavigationButtonColor;
 
+            if (navigationHistoryImages.Count >= 2)
+            {
+                activeNavbarImage = navigationHistoryImages[navigationHistoryImages.Count - 2];
+                if (activeNavbarImage != null)
+                    activeNavbarImage.color = activeNavigationButtonColor;
+                navigationHistoryImages.RemoveAt(navigationHistoryImages.Count - 1);
+            }
         }
         public void ChangeNavbarButtonState(Image image) //Change active navbar to active state
         {
-            if (activeNavbarImage != image)
-            {
-                //Old image
+            if (image == null || activeNavbarImage == image)
+                return;
+
+            if (activeNavbarImage != null)
                 activeNavbarImage.color = inactiveNavigationButtonColor;
 
-                //New image
-                activeNavbarImage = image;
-                activeNavbarImage.color = activeNavigationButtonColor;
-                navigationHistoryImages.Add(image);
-            }
+            activeNavbarImage = image;
+            activeNavbarImage.color = activeNavigationButtonColor;
+            navigationHistoryImages.Add(image);
         }
     }
 }

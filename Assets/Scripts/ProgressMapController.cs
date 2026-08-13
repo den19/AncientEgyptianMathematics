@@ -390,6 +390,9 @@ public class ProgressMapController : MonoBehaviour
             Destroy(existingVfx.gameObject);
         }
 
+        if (!GameSettings.VfxEnabled)
+            return;
+
         // Загружаем префаб Shiny Item (Loop) из пакета Cartoon FX
         GameObject prefab = Resources.Load<GameObject>("ProgressMap/CFXR2_ShinyItem");
         if (prefab == null)

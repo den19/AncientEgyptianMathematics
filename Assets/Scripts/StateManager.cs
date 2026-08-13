@@ -420,23 +420,23 @@ public class StateManager : MonoBehaviour
 
     private void PlayClickVFX(Vector3 position)
     {
-        if (clickVFX != null)
-        {
-            // Создаем эффект в позиции клика
-            ParticleSystem vfxInstance = Instantiate(clickVFX, position, Quaternion.identity);
-            vfxInstance.Play();
+        if (!GameSettings.VfxEnabled || clickVFX == null)
+            return;
 
-            // Уничтожаем после завершения
-            Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
-        }
+        // Создаем эффект в позиции клика
+        ParticleSystem vfxInstance = Instantiate(clickVFX, position, Quaternion.identity);
+        vfxInstance.Play();
+
+        // Уничтожаем после завершения
+        Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
     }
 
     private void PlayClickSFX()
     {
-        if (clickSFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(clickSFX, SfxVolume);
-        }
+        if (!GameSettings.SoundEnabled || clickSFX == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(clickSFX, SfxVolume);
     }
 
     private void CheckAchievements()
@@ -708,46 +708,46 @@ public class StateManager : MonoBehaviour
 
     private void PlayEnergy10VFX()
     {
-        if (energy10VFX != null)
-        {
-            ParticleSystem vfxInstance = Instantiate(energy10VFX, Vector3.zero, Quaternion.identity);
-            vfxInstance.Play();
-            Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
-        }
+        if (!GameSettings.VfxEnabled || energy10VFX == null)
+            return;
+
+        ParticleSystem vfxInstance = Instantiate(energy10VFX, Vector3.zero, Quaternion.identity);
+        vfxInstance.Play();
+        Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
     }
 
     private void PlayEnergy10SFX()
     {
-        if (energy10SFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(energy10SFX, SfxVolume);
-        }
+        if (!GameSettings.SoundEnabled || energy10SFX == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(energy10SFX, SfxVolume);
     }
 
     private void PlayEnergy20VFX()
     {
-        if (energy20VFX != null)
-        {
-            ParticleSystem vfxInstance = Instantiate(energy20VFX, Vector3.zero, Quaternion.identity);
-            vfxInstance.Play();
-            Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
-        }
+        if (!GameSettings.VfxEnabled || energy20VFX == null)
+            return;
+
+        ParticleSystem vfxInstance = Instantiate(energy20VFX, Vector3.zero, Quaternion.identity);
+        vfxInstance.Play();
+        Destroy(vfxInstance.gameObject, vfxInstance.main.duration);
     }
 
     private void PlayEnergy20SFX()
     {
-        if (energy20SFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(energy20SFX, SfxVolume);
-        }
+        if (!GameSettings.SoundEnabled || energy20SFX == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(energy20SFX, SfxVolume);
     }
 
     private void PlayEnergy30SFX()
     {
-        if (energy30SFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(energy30SFX, SfxVolume);
-        }
+        if (!GameSettings.SoundEnabled || energy30SFX == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(energy30SFX, SfxVolume);
     }
 
     private void ShowAchievementPanel1()

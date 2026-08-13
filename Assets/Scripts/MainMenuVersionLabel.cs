@@ -1,17 +1,21 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
 /// Shows Application.version at the bottom of MainMenu using an Itten-inspired
-/// warm/cool palette (sand/gold + nile teal). Sized for tall phones (Constant Pixel Size canvas).
+/// warm/cool palette (sand/gold + nile teal). Fixed Constant Pixel Size layout.
 /// </summary>
 public sealed class MainMenuVersionLabel : MonoBehaviour
 {
     const string HostObjectName = "MainMenuVersionHost";
     const string LabelObjectName = "VersionLabel";
     const string SceneName = "MainMenu";
+
+    // Fixed layout — same Constant Pixel Size approach as menu buttons / settings chips.
+    const float BandHeight = 100f;
+    const float BandY = 24f;
+    const int FontSize = 48;
 
     // Itten warm–cool harmony (matches marketing posters for this app).
     static readonly Color Gold = new Color(1f, 0.92f, 0.55f, 1f);
@@ -20,9 +24,29 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
     static readonly Color SandBand = new Color(36f / 255f, 28f / 255f, 20f / 255f, 0.55f);
 
     static Sprite s_WhiteSprite;
+    bool built;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void RegisterSceneHook()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AfterSceneLoad()
+    {
+        TrySpawn();
+    }
+
+    static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name != SceneName)
+            return;
+        TrySpawn();
+    }
+
+    static void TrySpawn()
     {
         if (SceneManager.GetActiveScene().name != SceneName)
             return;
@@ -30,7 +54,7 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         if (Object.FindFirstObjectByType<MainMenuVersionLabel>() != null)
             return;
 
-        var canvas = Object.FindFirstObjectByType<Canvas>();
+        var canvas = FindActiveSceneCanvas();
         if (canvas == null)
             return;
 
@@ -40,47 +64,48 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         host.transform.SetAsLastSibling();
     }
 
+    static Canvas FindActiveSceneCanvas()
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid())
+            return null;
+
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            if (root.name == "Canvas")
+            {
+                var named = root.GetComponent<Canvas>();
+                if (named != null)
+                    return named;
+            }
+        }
+
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            var canvas = root.GetComponentInChildren<Canvas>(true);
+            if (canvas != null)
+                return canvas;
+        }
+
+        return null;
+    }
+
     void OnEnable()
     {
-        StartCoroutine(LayoutWhenReady());
+        if (!built)
+            BuildOnce();
+        else
+            transform.SetAsLastSibling();
     }
 
-    void OnRectTransformDimensionsChange()
+    void BuildOnce()
     {
-        if (isActiveAndEnabled)
-            EnsureLabel();
-    }
-
-    IEnumerator LayoutWhenReady()
-    {
-        // Safe area / canvas pixel rect often settle a frame or two after first load on Android.
-        yield return null;
-        EnsureLabel();
-        yield return new WaitForEndOfFrame();
-        EnsureLabel();
-    }
-
-    void EnsureLabel()
-    {
-        var canvasRoot = transform.parent as RectTransform;
-        if (canvasRoot == null)
-            return;
-
-        float canvasHeight = canvasRoot.rect.height;
-        if (canvasHeight < 2f)
-            canvasHeight = Screen.height > 0 ? Screen.height : 1920f;
-
-        // Absolute pixels on MainMenu (Constant Pixel Size). Keep readable on tall phones.
-        int fontSize = Mathf.Clamp(Mathf.RoundToInt(canvasHeight * 0.028f), 40, 72);
-        float bandHeight = fontSize * 2.6f;
-        float bottomInset = ResolveBottomSafeInset(canvasRoot, canvasHeight);
-
         var rect = GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 0f);
         rect.anchorMax = new Vector2(1f, 0f);
         rect.pivot = new Vector2(0.5f, 0f);
-        rect.anchoredPosition = new Vector2(0f, bottomInset);
-        rect.sizeDelta = new Vector2(0f, bandHeight);
+        rect.anchoredPosition = new Vector2(0f, BandY);
+        rect.sizeDelta = new Vector2(0f, BandHeight);
         rect.localScale = Vector3.one;
         rect.localRotation = Quaternion.identity;
 
@@ -94,7 +119,7 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
 
         var text = EnsureText();
         text.text = "v" + Application.version;
-        text.fontSize = fontSize;
+        text.fontSize = FontSize;
         text.fontStyle = FontStyle.Bold;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Gold;
@@ -116,6 +141,9 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         accent.effectColor = Nile;
         accent.effectDistance = new Vector2(0f, 2.5f);
         accent.useGraphicAlpha = true;
+
+        transform.SetAsLastSibling();
+        built = true;
     }
 
     Text EnsureText()
@@ -129,7 +157,6 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
                 var existingRect = existing.GetComponent<RectTransform>();
                 existingRect.anchorMin = Vector2.zero;
                 existingRect.anchorMax = Vector2.one;
-                // Leave room for outline so glyphs are not clipped by the band height.
                 existingRect.offsetMin = new Vector2(16f, 10f);
                 existingRect.offsetMax = new Vector2(-16f, -10f);
                 return t;
@@ -152,18 +179,6 @@ public sealed class MainMenuVersionLabel : MonoBehaviour
         if (text.font == null)
             text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         return text;
-    }
-
-    static float ResolveBottomSafeInset(RectTransform canvasRoot, float canvasHeight)
-    {
-        if (Screen.height <= 0)
-            return 24f;
-
-        Rect safe = Screen.safeArea;
-        float bottomPixels = Mathf.Max(0f, safe.yMin);
-        float inset = bottomPixels * (canvasHeight / Screen.height);
-        // Keep label above gesture/nav bar with a comfortable margin.
-        return Mathf.Max(24f, inset + 16f);
     }
 
     static Sprite GetWhiteSprite()

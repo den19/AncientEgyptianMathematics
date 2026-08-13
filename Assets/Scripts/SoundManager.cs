@@ -76,6 +76,9 @@ public class SoundManager : MonoBehaviour
     // Универсальный метод для воспроизведения любого звука
     public void PlaySound(string soundName, float volume = 1f)
     {
+        if (!GameSettings.SoundEnabled)
+            return;
+
         if (soundLibrary.ContainsKey(soundName) && soundLibrary[soundName] != null)
         {
             audioSource.PlayOneShot(soundLibrary[soundName], volume * masterVolume);
